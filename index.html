@@ -14,19 +14,13 @@
     .last { font-size: 18px; color: #27ae60; font-weight: bold; word-break: break-all; }
     .count { color: #7f8c8d; font-size: 14px; }
     .err { color: #e74c3c; }
+    .ok { color: #27ae60; }
     .manual { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; }
     input[type=text] { width: 100%; padding: 14px; font-size: 16px; border: 2px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-    .config { background: #fff; padding: 10px; margin-bottom: 15px; border-radius: 8px; }
-    .config label { font-size: 14px; color: #555; }
 </style>
 </head>
 <body>
 <h1>SmartCart Scanner</h1>
-
-<div class="config">
-    <label>XIAO IP Address:</label>
-    <input type="text" id="xiaoIP" value="10.203.91.200">
-</div>
 
 <button id="startBtn">Start Camera</button>
 <button id="stopBtn" style="display:none; background:#e74c3c;">Stop Camera</button>
@@ -49,6 +43,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script>
+    var BLYNK_TOKEN = 'gB4jjgSRb1R761umknRtCPlXNZP9un7l';
+
     var video = document.getElementById('video');
     var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
@@ -58,22 +54,19 @@
     var lastSentTime = 0;
     var scanCount = 0;
 
-    function getXiaoURL() {
-        var ip = document.getElementById('xiaoIP').value.trim();
-        return 'http://' + ip + '/scan';
-    }
-
-    function sendToXiao(text) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', getXiaoURL(), true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onerror = function() {
-            document.getElementById('status').innerHTML = '<p class="err">Cannot reach XIAO. Check IP address and WiFi.</p>';
-        };
-        xhr.onload = function() {
-            document.getElementById('status').innerHTML = '';
-        };
-        xhr.send('code=' + encodeURIComponent(text));
+    function sendToBlynk(text) {
+        var url = 'https://blynk.cloud/external/api/update?token=' + BLYNK_TOKEN + '&V7=' + encodeURIComponent(text);
+        fetch(url)
+            .then(function(response) {
+                if (response.ok) {
+                    document.getElementById('status').innerHTML = '<p class="ok">Sent to Blynk OK</p>';
+                } else {
+                    document.getElementById('status').innerHTML = '<p class="err">Blynk error: ' + response.status + '</p>';
+                }
+            })
+            .catch(function(err) {
+                document.getElementById('status').innerHTML = '<p class="err">Network error: ' + err.message + '</p>';
+            });
     }
 
     function sendManual() {
@@ -133,7 +126,7 @@
         lastSent = text;
         lastSentTime = now;
 
-        sendToXiao(text);
+        sendToBlynk(text);
 
         document.getElementById('lastScan').textContent = text;
         scanCount++;
