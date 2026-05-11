@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartCart Scanner</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f0f0f0; }
+    h1 { color: #2c3e50; margin-top: 0; }
+    button { width: 100%; padding: 18px; font-size: 18px; background: #3498db; color: white; border: none; border-radius: 8px; margin: 10px 0; cursor: pointer; }
+    button:active { background: #2980b9; }
+    #video { width: 100%; max-width: 400px; display: block; margin: 10px auto; border: 3px solid #3498db; border-radius: 8px; background: #000; }
+    #canvas { display: none; }
+    .info { background: white; padding: 15px; margin-top: 15px; border-radius: 8px; border-left: 4px solid #27ae60; }
+    .last { font-size: 18px; color: #27ae60; font-weight: bold; word-break: break-all; }
+    .count { color: #7f8c8d; font-size: 14px; }
+    .err { color: #e74c3c; }
+    .manual { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; }
+    input[type=text] { width: 100%; padding: 14px; font-size: 16px; border: 2px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+    .config { background: #fff; padding: 10px; margin-bottom: 15px; border-radius: 8px; }
+    .config label { font-size: 14px; color: #555; }
+</style>
+</head>
+<body>
+<h1>SmartCart Scanner</h1>
+
+<div class="config">
+    <label>XIAO IP Address:</label>
+    <input type="text" id="xiaoIP" value="10.203.91.200">
+</div>
+
+<button id="startBtn">Start Camera</button>
+<button id="stopBtn" style="display:none; background:#e74c3c;">Stop Camera</button>
+
+<video id="video" playsinline></video>
+<canvas id="canvas"></canvas>
+<div id="status"></div>
+
+<div class="info">
+    <div>Last scan:</div>
+    <div class="last" id="lastScan">(none yet)</div>
+    <div class="count" id="counter">Total scans: 0</div>
+</div>
+
+<div class="manual">
+    <p><strong>Manual entry (fallback):</strong></p>
+    <input type="text" id="manualCode" placeholder="Type or paste code here">
+    <button onclick="sendManual()">Send</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+    var video = document.getElementById('video');
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    var stream = null;
+    var scanning = false;
+    var lastSent = '';
+    var lastSentTime = 0;
+    var scanCount = 0;
+
+    function getXiaoURL() {
+        var ip = document.getElementById('xiaoIP').value.trim();
+        return 'http://' + ip + '/scan';
+    }
+
+    function sendToXiao(text) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', getXiaoURL(), true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onerror = function() {
+            document.getElementById('status').innerHTML = '<p class="err">Cannot reach XIAO. Check IP address and WiFi.</p>';
+        };
+        xhr.onload = function() {
+            document.getElementById('status').innerHTML = '';
+        };
+        xhr.send('code=' + encodeURIComponent(text));
+    }
+
+    function sendManual() {
+        var code = document.getElementById('manualCode').value.trim();
+        if (code) {
+            handleDecodedCode(code);
+            document.getElementById('manualCode').value = '';
+        }
+    }
+
+    function startScanner() {
+        document.getElementById('status').innerHTML = '';
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }
+        }).then(function(s) {
+            stream = s;
+            video.srcObject = stream;
+            video.setAttribute('playsinline', true);
+            video.play();
+            scanning = true;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'block';
+            requestAnimationFrame(tick);
+        }).catch(function(err) {
+            document.getElementById('status').innerHTML = '<p class="err">Camera error: ' + err.message + '</p>';
+        });
+    }
+
+    function stopScanner() {
+        scanning = false;
+        if (stream) {
+            stream.getTracks().forEach(function(t) { t.stop(); });
+            stream = null;
+        }
+        document.getElementById('startBtn').style.display = 'block';
+        document.getElementById('stopBtn').style.display = 'none';
+    }
+
+    function tick() {
+        if (!scanning) return;
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var code = jsQR(imageData.data, imageData.width, imageData.height);
+            if (code && code.data) {
+                handleDecodedCode(code.data);
+            }
+        }
+        requestAnimationFrame(tick);
+    }
+
+    function handleDecodedCode(text) {
+        var now = Date.now();
+        if (text === lastSent && now - lastSentTime < 2000) return;
+        lastSent = text;
+        lastSentTime = now;
+
+        sendToXiao(text);
+
+        document.getElementById('lastScan').textContent = text;
+        scanCount++;
+        document.getElementById('counter').textContent = 'Total scans: ' + scanCount;
+
+        document.body.style.background = '#27ae60';
+        setTimeout(function() { document.body.style.background = '#f0f0f0'; }, 200);
+    }
+
+    document.getElementById('startBtn').addEventListener('click', startScanner);
+    document.getElementById('stopBtn').addEventListener('click', stopScanner);
+</script>
+</body>
+</html>
