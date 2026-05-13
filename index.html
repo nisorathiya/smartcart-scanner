@@ -18,6 +18,77 @@
     input[type=text] { width: 100%; padding: 14px; font-size: 16px; border: 2px solid #ccc; border-radius: 6px; box-sizing: border-box; }
     .config { background: #fff; padding: 10px; margin-bottom: 15px; border-radius: 8px; }
     .config label { font-size: 14px; color: #555; }
+
+    /* Basket styling */
+    .basket {
+        background: white;
+        margin-top: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
+        overflow: hidden;
+    }
+    .basket-header {
+        background: #3498db;
+        color: white;
+        padding: 12px 15px;
+        font-size: 16px;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .basket-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .basket-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .basket-item:last-child { border-bottom: none; }
+    .item-name {
+        font-weight: bold;
+        color: #2c3e50;
+        font-size: 15px;
+    }
+    .item-details {
+        font-size: 13px;
+        color: #7f8c8d;
+        margin-top: 2px;
+    }
+    .item-price {
+        font-size: 16px;
+        font-weight: bold;
+        color: #27ae60;
+        white-space: nowrap;
+    }
+    .basket-empty {
+        padding: 30px 15px;
+        text-align: center;
+        color: #95a5a6;
+        font-style: italic;
+    }
+    .basket-total {
+        background: #ecf0f1;
+        padding: 14px 15px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c3e50;
+        display: flex;
+        justify-content: space-between;
+        border-top: 2px solid #bdc3c7;
+    }
+    .basket-total .amount {
+        color: #27ae60;
+        font-size: 22px;
+    }
+    .clear-btn {
+        background: #e67e22;
+        margin-top: 10px;
+    }
 </style>
 </head>
 <body>
@@ -41,6 +112,23 @@
     <div class="count" id="counter">Total scans: 0</div>
 </div>
 
+<!-- ===== Basket List ===== -->
+<div class="basket">
+    <div class="basket-header">
+        <span>🛒 Your Basket</span>
+        <span id="itemCount">0 items</span>
+    </div>
+    <div class="basket-list" id="basketList">
+        <div class="basket-empty" id="basketEmpty">Your basket is empty. Scan an item to add.</div>
+    </div>
+    <div class="basket-total">
+        <span>Running Total:</span>
+        <span class="amount" id="basketTotal">$0.00</span>
+    </div>
+</div>
+
+<button class="clear-btn" onclick="clearBasket()">Clear Basket (New Customer)</button>
+
 <div class="manual">
     <p><strong>Manual entry (fallback):</strong></p>
     <input type="text" id="manualCode" placeholder="Type or paste code here">
@@ -57,6 +145,10 @@
     var lastSent = '';
     var lastSentTime = 0;
     var scanCount = 0;
+
+    // Basket state
+    var basket = [];
+    var basketTotal = 0;
 
     function getXiaoURL() {
         var ip = document.getElementById('xiaoIP').value.trim();
@@ -82,6 +174,72 @@
             handleDecodedCode(code);
             document.getElementById('manualCode').value = '';
         }
+    }
+
+    function parseQRString(text) {
+        // Expected format: Name,Price,Weight
+        var parts = text.split(',');
+        if (parts.length >= 3) {
+            return {
+                name: parts[0].trim(),
+                price: parseFloat(parts[1].trim()) || 0,
+                weight: parseInt(parts[2].trim()) || 0,
+                valid: true
+            };
+        }
+        return { name: text, price: 0, weight: 0, valid: false };
+    }
+
+    function addToBasket(item) {
+        basket.push(item);
+        basketTotal += item.price;
+        renderBasket();
+    }
+
+    function renderBasket() {
+        var list = document.getElementById('basketList');
+        var empty = document.getElementById('basketEmpty');
+
+        if (basket.length === 0) {
+            list.innerHTML = '<div class="basket-empty" id="basketEmpty">Your basket is empty. Scan an item to add.</div>';
+        } else {
+            var html = '';
+            // Show most recent items first
+            for (var i = basket.length - 1; i >= 0; i--) {
+                var item = basket[i];
+                html += '<div class="basket-item">';
+                html += '  <div>';
+                html += '    <div class="item-name">' + escapeHtml(item.name) + '</div>';
+                html += '    <div class="item-details">Weight: ' + item.weight + 'g</div>';
+                html += '  </div>';
+                html += '  <div class="item-price">$' + item.price.toFixed(2) + '</div>';
+                html += '</div>';
+            }
+            list.innerHTML = html;
+        }
+
+        document.getElementById('itemCount').textContent = basket.length + (basket.length === 1 ? ' item' : ' items');
+        document.getElementById('basketTotal').textContent = '$' + basketTotal.toFixed(2);
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function clearBasket() {
+        if (basket.length === 0) {
+            alert('Basket is already empty.');
+            return;
+        }
+        if (!confirm('Clear basket and start a new customer?')) return;
+        basket = [];
+        basketTotal = 0;
+        scanCount = 0;
+        document.getElementById('lastScan').textContent = '(none yet)';
+        document.getElementById('counter').textContent = 'Total scans: 0';
+        renderBasket();
     }
 
     function startScanner() {
@@ -133,18 +291,32 @@
         lastSent = text;
         lastSentTime = now;
 
+        // Send to XIAO
         sendToXiao(text);
 
+        // Update last scan display
         document.getElementById('lastScan').textContent = text;
         scanCount++;
         document.getElementById('counter').textContent = 'Total scans: ' + scanCount;
 
+        // Parse and add to basket
+        var parsed = parseQRString(text);
+        if (parsed.valid) {
+            addToBasket(parsed);
+        } else {
+            document.getElementById('status').innerHTML = '<p class="err">Invalid QR format. Expected: Name,Price,Weight</p>';
+        }
+
+        // Green flash feedback
         document.body.style.background = '#27ae60';
         setTimeout(function() { document.body.style.background = '#f0f0f0'; }, 200);
     }
 
     document.getElementById('startBtn').addEventListener('click', startScanner);
     document.getElementById('stopBtn').addEventListener('click', stopScanner);
+
+    // Initial render
+    renderBasket();
 </script>
 </body>
 </html>
