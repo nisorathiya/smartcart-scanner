@@ -32,7 +32,15 @@ input[type=text] { width: 100%; padding: 14px; font-size: 16px; border: 2px soli
 .basket-empty { padding: 30px 15px; text-align: center; color: #95a5a6; font-style: italic; }
 .basket-total { background: #ecf0f1; padding: 14px 15px; font-size: 18px; font-weight: bold; color: #2c3e50; display: flex; justify-content: space-between; border-top: 2px solid #bdc3c7; }
 .basket-total .amount { color: #27ae60; font-size: 22px; }
-.clear-btn { background: #e67e22; margin-top: 10px; }
+.pay-btn { 
+    background: #27ae60; 
+    margin-top: 15px; 
+    font-size: 20px;
+    font-weight: bold;
+    padding: 22px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.pay-btn:active { background: #1e8449; }
 </style>
 </head>
 <body>
@@ -70,7 +78,7 @@ input[type=text] { width: 100%; padding: 14px; font-size: 16px; border: 2px soli
     </div>
 </div>
 
-<button class="clear-btn" onclick="clearBasket()">Clear Basket (New Customer)</button>
+<button class="pay-btn" onclick="payNow()">💳 Pay Now</button>
 
 <div class="manual">
     <p><strong>Manual entry (fallback):</strong></p>
@@ -193,21 +201,35 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-function clearBasket() {
+function payNow() {
     if (basket.length === 0) {
-        alert('Basket is already empty.');
+        alert('Basket is empty. Add items first.');
         return;
     }
-    if (!confirm('Clear basket and start new customer?')) return;
-    basket = [];
-    basketTotal = 0;
-    scanCount = 0;
-    document.getElementById('lastScan').textContent = '(none yet)';
-    document.getElementById('counter').textContent = 'Total scans: 0';
-    renderBasket();
+    if (!confirm('Process payment of $' + basketTotal.toFixed(2) + '?')) return;
     
+    // Send reset to XIAO — it will check if basket is physically empty
     var xhr = new XMLHttpRequest();
     xhr.open('POST', getXiaoBase() + '/reset', true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            // Payment processed — clear local basket
+            basket = [];
+            basketTotal = 0;
+            scanCount = 0;
+            document.getElementById('lastScan').textContent = '(none yet)';
+            document.getElementById('counter').textContent = 'Total scans: 0';
+            renderBasket();
+            document.getElementById('status').innerHTML = 
+                '<p style="color:#27ae60;font-weight:bold;">Payment successful! Take your items and leave the basket empty.</p>';
+            setTimeout(function() {
+                document.getElementById('status').innerHTML = '';
+            }, 5000);
+        }
+    };
+    xhr.onerror = function() {
+        document.getElementById('status').innerHTML = '<p class="err">Payment failed. Cannot reach XIAO.</p>';
+    };
     xhr.send();
 }
 
