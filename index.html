@@ -4,91 +4,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SmartCart Scanner</title>
 <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f0f0f0; }
-    h1 { color: #2c3e50; margin-top: 0; }
-    button { width: 100%; padding: 18px; font-size: 18px; background: #3498db; color: white; border: none; border-radius: 8px; margin: 10px 0; cursor: pointer; }
-    button:active { background: #2980b9; }
-    #video { width: 100%; max-width: 400px; display: block; margin: 10px auto; border: 3px solid #3498db; border-radius: 8px; background: #000; }
-    #canvas { display: none; }
-    .info { background: white; padding: 15px; margin-top: 15px; border-radius: 8px; border-left: 4px solid #27ae60; }
-    .last { font-size: 18px; color: #27ae60; font-weight: bold; word-break: break-all; }
-    .count { color: #7f8c8d; font-size: 14px; }
-    .err { color: #e74c3c; }
-    .manual { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; }
-    input[type=text] { width: 100%; padding: 14px; font-size: 16px; border: 2px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-    .config { background: #fff; padding: 10px; margin-bottom: 15px; border-radius: 8px; }
-    .config label { font-size: 14px; color: #555; }
-
-    /* Basket styling */
-    .basket {
-        background: white;
-        margin-top: 15px;
-        border-radius: 8px;
-        border-left: 4px solid #3498db;
-        overflow: hidden;
-    }
-    .basket-header {
-        background: #3498db;
-        color: white;
-        padding: 12px 15px;
-        font-size: 16px;
-        font-weight: bold;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .basket-list {
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    .basket-item {
-        padding: 12px 15px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .basket-item:last-child { border-bottom: none; }
-    .item-name {
-        font-weight: bold;
-        color: #2c3e50;
-        font-size: 15px;
-    }
-    .item-details {
-        font-size: 13px;
-        color: #7f8c8d;
-        margin-top: 2px;
-    }
-    .item-price {
-        font-size: 16px;
-        font-weight: bold;
-        color: #27ae60;
-        white-space: nowrap;
-    }
-    .basket-empty {
-        padding: 30px 15px;
-        text-align: center;
-        color: #95a5a6;
-        font-style: italic;
-    }
-    .basket-total {
-        background: #ecf0f1;
-        padding: 14px 15px;
-        font-size: 18px;
-        font-weight: bold;
-        color: #2c3e50;
-        display: flex;
-        justify-content: space-between;
-        border-top: 2px solid #bdc3c7;
-    }
-    .basket-total .amount {
-        color: #27ae60;
-        font-size: 22px;
-    }
-    .clear-btn {
-        background: #e67e22;
-        margin-top: 10px;
-    }
+body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f0f0f0; }
+h1 { color: #2c3e50; margin-top: 0; }
+button { width: 100%; padding: 18px; font-size: 18px; background: #3498db; color: white; border: none; border-radius: 8px; margin: 10px 0; cursor: pointer; }
+button:active { background: #2980b9; }
+#video { width: 100%; max-width: 400px; display: block; margin: 10px auto; border: 3px solid #3498db; border-radius: 8px; background: #000; }
+#canvas { display: none; }
+.info { background: white; padding: 15px; margin-top: 15px; border-radius: 8px; border-left: 4px solid #27ae60; }
+.last { font-size: 18px; color: #27ae60; font-weight: bold; word-break: break-all; }
+.count { color: #7f8c8d; font-size: 14px; }
+.err { color: #e74c3c; }
+.manual { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; }
+input[type=text] { width: 100%; padding: 14px; font-size: 16px; border: 2px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+.config { background: #fff; padding: 10px; margin-bottom: 15px; border-radius: 8px; }
+.config label { font-size: 14px; color: #555; }
+.basket { background: white; margin-top: 15px; border-radius: 8px; border-left: 4px solid #3498db; overflow: hidden; }
+.basket-header { background: #3498db; color: white; padding: 12px 15px; font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+.basket-list { max-height: 350px; overflow-y: auto; }
+.basket-item { padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.basket-item:last-child { border-bottom: none; }
+.item-info { flex: 1; min-width: 0; }
+.item-name { font-weight: bold; color: #2c3e50; font-size: 15px; }
+.item-details { font-size: 13px; color: #7f8c8d; margin-top: 2px; }
+.item-price { font-size: 16px; font-weight: bold; color: #27ae60; white-space: nowrap; }
+.remove-btn { background: #e74c3c; color: white; border: none; border-radius: 6px; padding: 8px 14px; font-size: 13px; cursor: pointer; margin: 0; width: auto; flex-shrink: 0; }
+.remove-btn:active { background: #c0392b; }
+.basket-empty { padding: 30px 15px; text-align: center; color: #95a5a6; font-style: italic; }
+.basket-total { background: #ecf0f1; padding: 14px 15px; font-size: 18px; font-weight: bold; color: #2c3e50; display: flex; justify-content: space-between; border-top: 2px solid #bdc3c7; }
+.basket-total .amount { color: #27ae60; font-size: 22px; }
+.clear-btn { background: #e67e22; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -96,7 +40,7 @@
 
 <div class="config">
     <label>XIAO IP Address:</label>
-    <input type="text" id="xiaoIP" value="10.203.91.17">
+    <input type="text" id="xiaoIP" value="10.203.91.200">
 </div>
 
 <button id="startBtn">Start Camera</button>
@@ -112,14 +56,13 @@
     <div class="count" id="counter">Total scans: 0</div>
 </div>
 
-<!-- ===== Basket List ===== -->
 <div class="basket">
     <div class="basket-header">
-        <span>🛒 Your Basket</span>
+        <span>Your Basket</span>
         <span id="itemCount">0 items</span>
     </div>
     <div class="basket-list" id="basketList">
-        <div class="basket-empty" id="basketEmpty">Your basket is empty. Scan an item to add.</div>
+        <div class="basket-empty">Basket is empty. Scan an item.</div>
     </div>
     <div class="basket-total">
         <span>Running Total:</span>
@@ -137,186 +80,205 @@
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script>
-    var video = document.getElementById('video');
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    var stream = null;
-    var scanning = false;
-    var lastSent = '';
-    var lastSentTime = 0;
-    var scanCount = 0;
+var video = document.getElementById('video');
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var stream = null;
+var scanning = false;
+var lastSent = '';
+var lastSentTime = 0;
+var scanCount = 0;
+var basket = [];
+var basketTotal = 0;
 
-    // Basket state
-    var basket = [];
-    var basketTotal = 0;
+function getXiaoBase() {
+    var ip = document.getElementById('xiaoIP').value.trim();
+    return 'http://' + ip;
+}
 
-    function getXiaoURL() {
-        var ip = document.getElementById('xiaoIP').value.trim();
-        return 'http://' + ip + '/scan';
-    }
-
-    function sendToXiao(text) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', getXiaoURL(), true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onerror = function() {
-            document.getElementById('status').innerHTML = '<p class="err">Cannot reach XIAO. Check IP address and WiFi.</p>';
-        };
-        xhr.onload = function() {
-            document.getElementById('status').innerHTML = '';
-        };
-        xhr.send('code=' + encodeURIComponent(text));
-    }
-
-    function sendManual() {
-        var code = document.getElementById('manualCode').value.trim();
-        if (code) {
-            handleDecodedCode(code);
-            document.getElementById('manualCode').value = '';
-        }
-    }
-
-    function parseQRString(text) {
-        // Expected format: Name,Price,Weight
-        var parts = text.split(',');
-        if (parts.length >= 3) {
-            return {
-                name: parts[0].trim(),
-                price: parseFloat(parts[1].trim()) || 0,
-                weight: parseInt(parts[2].trim()) || 0,
-                valid: true
-            };
-        }
-        return { name: text, price: 0, weight: 0, valid: false };
-    }
-
-    function addToBasket(item) {
-        basket.push(item);
-        basketTotal += item.price;
-        renderBasket();
-    }
-
-    function renderBasket() {
-        var list = document.getElementById('basketList');
-        var empty = document.getElementById('basketEmpty');
-
-        if (basket.length === 0) {
-            list.innerHTML = '<div class="basket-empty" id="basketEmpty">Your basket is empty. Scan an item to add.</div>';
-        } else {
-            var html = '';
-            // Show most recent items first
-            for (var i = basket.length - 1; i >= 0; i--) {
-                var item = basket[i];
-                html += '<div class="basket-item">';
-                html += '  <div>';
-                html += '    <div class="item-name">' + escapeHtml(item.name) + '</div>';
-                html += '    <div class="item-details">Weight: ' + item.weight + 'g</div>';
-                html += '  </div>';
-                html += '  <div class="item-price">$' + item.price.toFixed(2) + '</div>';
-                html += '</div>';
-            }
-            list.innerHTML = html;
-        }
-
-        document.getElementById('itemCount').textContent = basket.length + (basket.length === 1 ? ' item' : ' items');
-        document.getElementById('basketTotal').textContent = '$' + basketTotal.toFixed(2);
-    }
-
-    function escapeHtml(str) {
-        var div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    function clearBasket() {
-        if (basket.length === 0) {
-            alert('Basket is already empty.');
-            return;
-        }
-        if (!confirm('Clear basket and start a new customer?')) return;
-        basket = [];
-        basketTotal = 0;
-        scanCount = 0;
-        document.getElementById('lastScan').textContent = '(none yet)';
-        document.getElementById('counter').textContent = 'Total scans: 0';
-        renderBasket();
-    }
-
-    function startScanner() {
+function sendToXiao(text) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', getXiaoBase() + '/scan', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onerror = function() {
+        document.getElementById('status').innerHTML = '<p class="err">Cannot reach XIAO.</p>';
+    };
+    xhr.onload = function() {
         document.getElementById('status').innerHTML = '';
-        navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }
-        }).then(function(s) {
-            stream = s;
-            video.srcObject = stream;
-            video.setAttribute('playsinline', true);
-            video.play();
-            scanning = true;
-            document.getElementById('startBtn').style.display = 'none';
-            document.getElementById('stopBtn').style.display = 'block';
-            requestAnimationFrame(tick);
-        }).catch(function(err) {
-            document.getElementById('status').innerHTML = '<p class="err">Camera error: ' + err.message + '</p>';
-        });
+    };
+    xhr.send('code=' + encodeURIComponent(text));
+}
+
+function removeFromXiao(item) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', getXiaoBase() + '/remove', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onerror = function() {
+        document.getElementById('status').innerHTML = '<p class="err">Cannot reach XIAO.</p>';
+    };
+    xhr.send('name=' + encodeURIComponent(item.name) +
+             '&price=' + item.price +
+             '&weight=' + item.weight);
+}
+
+function sendManual() {
+    var code = document.getElementById('manualCode').value.trim();
+    if (code) {
+        handleDecodedCode(code);
+        document.getElementById('manualCode').value = '';
     }
+}
 
-    function stopScanner() {
-        scanning = false;
-        if (stream) {
-            stream.getTracks().forEach(function(t) { t.stop(); });
-            stream = null;
-        }
-        document.getElementById('startBtn').style.display = 'block';
-        document.getElementById('stopBtn').style.display = 'none';
+function parseQRString(text) {
+    var parts = text.split(',');
+    if (parts.length >= 3) {
+        return {
+            name: parts[0].trim(),
+            price: parseFloat(parts[1].trim()) || 0,
+            weight: parseInt(parts[2].trim()) || 0,
+            valid: true
+        };
     }
+    return { name: text, price: 0, weight: 0, valid: false };
+}
 
-    function tick() {
-        if (!scanning) return;
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            canvas.height = video.videoHeight;
-            canvas.width = video.videoWidth;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            var code = jsQR(imageData.data, imageData.width, imageData.height);
-            if (code && code.data) {
-                handleDecodedCode(code.data);
-            }
-        }
-        requestAnimationFrame(tick);
-    }
-
-    function handleDecodedCode(text) {
-        var now = Date.now();
-        if (text === lastSent && now - lastSentTime < 2000) return;
-        lastSent = text;
-        lastSentTime = now;
-
-        // Send to XIAO
-        sendToXiao(text);
-
-        // Update last scan display
-        document.getElementById('lastScan').textContent = text;
-        scanCount++;
-        document.getElementById('counter').textContent = 'Total scans: ' + scanCount;
-
-        // Parse and add to basket
-        var parsed = parseQRString(text);
-        if (parsed.valid) {
-            addToBasket(parsed);
-        } else {
-            document.getElementById('status').innerHTML = '<p class="err">Invalid QR format. Expected: Name,Price,Weight</p>';
-        }
-
-        // Green flash feedback
-        document.body.style.background = '#27ae60';
-        setTimeout(function() { document.body.style.background = '#f0f0f0'; }, 200);
-    }
-
-    document.getElementById('startBtn').addEventListener('click', startScanner);
-    document.getElementById('stopBtn').addEventListener('click', stopScanner);
-
-    // Initial render
+function addToBasket(item) {
+    basket.push(item);
+    basketTotal += item.price;
     renderBasket();
+}
+
+function removeItem(index) {
+    if (index < 0 || index >= basket.length) return;
+    var item = basket[index];
+    if (!confirm('Remove "' + item.name + '" from basket?')) return;
+    
+    // Remove from local basket
+    basket.splice(index, 1);
+    basketTotal -= item.price;
+    if (basketTotal < 0) basketTotal = 0;
+    
+    // Tell the XIAO to update its state
+    removeFromXiao(item);
+    
+    renderBasket();
+}
+
+function renderBasket() {
+    var list = document.getElementById('basketList');
+    if (basket.length === 0) {
+        list.innerHTML = '<div class="basket-empty">Basket is empty. Scan an item.</div>';
+    } else {
+        var html = '';
+        for (var i = basket.length - 1; i >= 0; i--) {
+            var item = basket[i];
+            html += '<div class="basket-item">';
+            html += '  <div class="item-info">';
+            html += '    <div class="item-name">' + escapeHtml(item.name) + '</div>';
+            html += '    <div class="item-details">Weight: ' + item.weight + 'g</div>';
+            html += '  </div>';
+            html += '  <div class="item-price">$' + item.price.toFixed(2) + '</div>';
+            html += '  <button class="remove-btn" onclick="removeItem(' + i + ')">Remove</button>';
+            html += '</div>';
+        }
+        list.innerHTML = html;
+    }
+    document.getElementById('itemCount').textContent = basket.length + (basket.length === 1 ? ' item' : ' items');
+    document.getElementById('basketTotal').textContent = '$' + basketTotal.toFixed(2);
+}
+
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function clearBasket() {
+    if (basket.length === 0) {
+        alert('Basket is already empty.');
+        return;
+    }
+    if (!confirm('Clear basket and start new customer?')) return;
+    basket = [];
+    basketTotal = 0;
+    scanCount = 0;
+    document.getElementById('lastScan').textContent = '(none yet)';
+    document.getElementById('counter').textContent = 'Total scans: 0';
+    renderBasket();
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', getXiaoBase() + '/reset', true);
+    xhr.send();
+}
+
+function startScanner() {
+    document.getElementById('status').innerHTML = '';
+    navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+    }).then(function(s) {
+        stream = s;
+        video.srcObject = stream;
+        video.setAttribute('playsinline', true);
+        video.play();
+        scanning = true;
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'block';
+        requestAnimationFrame(tick);
+    }).catch(function(err) {
+        document.getElementById('status').innerHTML = '<p class="err">Camera error: ' + err.message + '</p>';
+    });
+}
+
+function stopScanner() {
+    scanning = false;
+    if (stream) {
+        stream.getTracks().forEach(function(t) { t.stop(); });
+        stream = null;
+    }
+    document.getElementById('startBtn').style.display = 'block';
+    document.getElementById('stopBtn').style.display = 'none';
+}
+
+function tick() {
+    if (!scanning) return;
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code && code.data) {
+            handleDecodedCode(code.data);
+        }
+    }
+    requestAnimationFrame(tick);
+}
+
+function handleDecodedCode(text) {
+    var now = Date.now();
+    if (text === lastSent && now - lastSentTime < 2000) return;
+    lastSent = text;
+    lastSentTime = now;
+
+    sendToXiao(text);
+    document.getElementById('lastScan').textContent = text;
+    scanCount++;
+    document.getElementById('counter').textContent = 'Total scans: ' + scanCount;
+    
+    var parsed = parseQRString(text);
+    if (parsed.valid) {
+        addToBasket(parsed);
+    } else {
+        document.getElementById('status').innerHTML = '<p class="err">Invalid QR format.</p>';
+    }
+    
+    document.body.style.background = '#27ae60';
+    setTimeout(function() { document.body.style.background = '#f0f0f0'; }, 200);
+}
+
+document.getElementById('startBtn').addEventListener('click', startScanner);
+document.getElementById('stopBtn').addEventListener('click', stopScanner);
+renderBasket();
 </script>
 </body>
 </html>
